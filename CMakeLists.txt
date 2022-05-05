@@ -1,4 +1,4 @@
 add_library(chunky SHARED
   Display.c
   )
-target_link_libraries(chunky PUBLIC raylib)
+target_link_libraries(chunky PUBLIC raylib m dl pthread)
