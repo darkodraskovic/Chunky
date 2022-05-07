@@ -1,9 +1,9 @@
-#include "Display.h"
+#include "display.h"
 
 #include <stdlib.h>
 #include <string.h>
 
-#include "Hooks.h"
+#include "hooks.h"
 #include "raylib.h"
 
 // framebuffer
