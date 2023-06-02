@@ -6,18 +6,8 @@
 #include "hooks.h"
 #include "raylib.h"
 
-// framebuffer
-unsigned int* drawBuffer;
-unsigned int* clearBuffer;
-Texture2D bufferTexture;
-int bufferSize;
-
-// render texture
-RenderTexture2D renderTexture;
-
-int width;
-int height;
-int scale;
+Framebuffer framebuffer;
+Screen screen;
 
 void InitRenderer(DisplayConfig displayConfig) {
   InitWindow(displayConfig.width * displayConfig.scale, displayConfig.height * displayConfig.scale,
@@ -25,19 +15,19 @@ void InitRenderer(DisplayConfig displayConfig) {
 
   SetTargetFPS(60);
 
-  renderTexture = LoadRenderTexture(displayConfig.width, displayConfig.height);
+  framebuffer.renderTexture = LoadRenderTexture(displayConfig.width, displayConfig.height);
 
   Image image = GenImageColor(displayConfig.width, displayConfig.height, BLACK);
-  drawBuffer = image.data;
+  framebuffer.drawBuffer = image.data;
   // (Color){0} is transparent: draw render texture over buffer texture
   image = GenImageColor(displayConfig.width, displayConfig.height, (Color){0});
-  clearBuffer = image.data;
-  bufferTexture = LoadTextureFromImage(image);
-  bufferSize = displayConfig.width * displayConfig.height * sizeof(unsigned int);
+  framebuffer.clearBuffer = image.data;
+  framebuffer.bufferTexture = LoadTextureFromImage(image);
+  framebuffer.bufferSize = displayConfig.width * displayConfig.height * sizeof(unsigned int);
 
-  width = displayConfig.width;
-  height = displayConfig.height;
-  scale = displayConfig.scale;
+  screen.width = displayConfig.width;
+  screen.height = displayConfig.height;
+  screen.scale = displayConfig.scale;
 }
 
 // TODO: handle alpha
@@ -61,9 +51,11 @@ inline unsigned int ColorToUnsignedInt(Color color) {
           (unsigned int)color.r);
 }
 
-void SetPixel(unsigned int x, unsigned int y, unsigned int color) { *(drawBuffer + y * width + x) = color; }
+void SetPixel(unsigned int x, unsigned int y, unsigned int color) {
+  *(framebuffer.drawBuffer + y * screen.width + x) = color;
+}
 
-static inline void ClearBuffer() { memcpy(drawBuffer, clearBuffer, bufferSize); }
+static inline void ClearBuffer() { memcpy(framebuffer.drawBuffer, framebuffer.clearBuffer, framebuffer.bufferSize); }
 
 int Run(DisplayConfig displayConfig) {
   InitRenderer(displayConfig);
@@ -73,7 +65,7 @@ int Run(DisplayConfig displayConfig) {
     Update();      // hook
     PostUpdate();  // hook
 
-    BeginTextureMode(renderTexture);
+    BeginTextureMode(framebuffer.renderTexture);
 
     ClearBackground(BLACK);
     ClearBuffer();
@@ -84,11 +76,12 @@ int Run(DisplayConfig displayConfig) {
 
     BeginDrawing();
 
-    DrawTexturePro(renderTexture.texture, (Rectangle){0, 0, width, -height},
-                   (Rectangle){0, 0, width * scale, height * scale}, (Vector2){0, 0}, 0, WHITE);
+    DrawTexturePro(framebuffer.renderTexture.texture, (Rectangle){0, 0, screen.width, -screen.height},
+                   (Rectangle){0, 0, screen.width * screen.scale, screen.height * screen.scale}, (Vector2){0, 0}, 0,
+                   WHITE);
 
-    UpdateTexture(bufferTexture, drawBuffer);
-    DrawTextureEx(bufferTexture, (Vector2){0, 0}, 0, scale, WHITE);
+    UpdateTexture(framebuffer.bufferTexture, framebuffer.drawBuffer);
+    DrawTextureEx(framebuffer.bufferTexture, (Vector2){0, 0}, 0, screen.scale, WHITE);
 
     PostDraw();  // hook
 
@@ -97,7 +90,7 @@ int Run(DisplayConfig displayConfig) {
 
   Close();  // hook
 
-  UnloadRenderTexture(renderTexture);
+  UnloadRenderTexture(framebuffer.renderTexture);
   CloseWindow();  // Close window and OpenGL context
 
   return 0;

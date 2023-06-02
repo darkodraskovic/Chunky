@@ -10,6 +10,20 @@ typedef struct {
   char* windowTitle;
 } DisplayConfig;
 
+typedef struct {
+  unsigned int* drawBuffer;
+  unsigned int* clearBuffer;
+  Texture2D bufferTexture;
+  int bufferSize;
+  RenderTexture2D renderTexture;
+} Framebuffer;
+
+typedef struct {
+  int width;
+  int height;
+  int scale;
+} Screen;
+
 int Run();
 
 extern Color ColorScale(Color color, float s);
